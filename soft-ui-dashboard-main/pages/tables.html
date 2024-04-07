@@ -91,7 +91,7 @@
             <span class="nav-link-text ms-1">Data</span>
           </a>
         </li>
-        
+
 
         <li class="nav-item mt-3">
           <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account pages</h6>
@@ -103,26 +103,27 @@
             <div class="card-body text-start p-3 w-100">
               <div
                 class="icon icon-shape icon-sm bg-white shadow text-center mb-3 d-flex align-items-center justify-content-center border-radius-md">
-                <i class="ni ni-diamond text-dark text-gradient text-lg top-0" aria-hidden="true" id="sidenavCardIcon"></i>
+                <i class="ni ni-diamond text-dark text-gradient text-lg top-0" aria-hidden="true"
+                  id="sidenavCardIcon"></i>
               </div>
               <div class="docs-info">
                 <h6 class="text-white up mb-0">Need help?</h6>
                 <p class="text-xs font-weight-bold">Please check our docs</p>
                 <a href="" target="_blank" class="btn btn-white btn-sm w-100 mb-0">Documentation</a>
               </div>
+            </div>
           </div>
-        </div>
 
       </ul>
     </div>
-    
+
   </aside>
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
     <!-- Navbar -->
     <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur"
       navbar-scroll="true">
       <div class="container-fluid py-1 px-3">
-       
+
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
             <div class="input-group">
@@ -131,8 +132,8 @@
             </div>
           </div>
           <ul class="navbar-nav  justify-content-end">
-            
-           
+
+
             <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
               <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
                 <div class="sidenav-toggler-inner">
@@ -250,9 +251,11 @@
                       <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Current</th>
                       <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Power</th>
                       <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Energy</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Temperature</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Temperature
+                      </th>
                       <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Humidity</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder text-center opacity-7 ps-2">Occupancy</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder text-center opacity-7 ps-2">
+                        Occupancy</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -260,84 +263,91 @@
                     <!-- The table rows will be dynamically generated here -->
                   </tbody>
                 </table>
-                
+
                 <script>
                   let SHEET_ID = '1jUYm23ND5VbIYhqv6YAhnQkfnTr-_82c7PBLrcwiNfA';
                   let SHEET_TITLE = 'Sheet1';
                   let SHEET_RANGE = 'A1:I';
-                  let FULL_URL = ('https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?sheet=' + SHEET_TITLE + '&range=' + SHEET_RANGE);
+                  let FULL_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?sheet=' + SHEET_TITLE + '&range=' + SHEET_RANGE;
                   let dataTableBody = document.getElementById('data-table-body');
-                
+              
                   fetch(FULL_URL)
-                    .then(res => res.text())
-                    .then(rep => {
-                      let data = JSON.parse(rep.substr(47).slice(0, -2));
-                      let rows = data.table.rows;
-                
-                      // Append the rows to the table
-                      for (let i = 1; i < rows.length; i++) {
-                        let row = createTableRow(rows[i].c);
-                        if (row) {
-                          dataTableBody.appendChild(row);
-                        }
-                      }
-                    });
-                
+                      .then(res => res.text())
+                      .then(rep => {
+                          let data = JSON.parse(rep.substr(47).slice(0, -2));
+                          let rows = data.table.rows;
+              
+                          // Append the rows to the table
+                          for (let i = 1; i < rows.length; i++) {
+                              let row = createTableRow(rows[i].c);
+                              if (row) {
+                                  dataTableBody.appendChild(row);
+                              }
+                          }
+                      });
+              
                   function createTableRow(data) {
-                    const tr = document.createElement('tr');
-                
-                    // Create and append the cells for each column
-                    const dateCell = document.createElement('td');
-                    dateCell.innerHTML = `<div class="d-flex px-2"><div><div class="my-auto"><h6 class="mb-0 text-sm">${data[0] ? data[0].v : ''}</h6></div></div></div>`;
-                    tr.appendChild(dateCell);
-                
-                    const timeCell = document.createElement('td');
-                    timeCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[1] ? data[1].f : ''}</p>`;
-                    tr.appendChild(timeCell);
-                
-                    const voltageCell = document.createElement('td');
-                    voltageCell.innerHTML = `<span class="text-xs font-weight-bold">${data[2] ? data[2].f : ''}</span>`;
-                    tr.appendChild(voltageCell);
-                
-                    const currentCell = document.createElement('td');
-                    currentCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[3] ? data[3].f : ''}</p>`;
-                    tr.appendChild(currentCell);
-                
-                    const powerCell = document.createElement('td');
-                    powerCell.innerHTML = `<span class="text-xs font-weight-bold">${data[4] ? data[4].f : ''}</span>`;
-                    tr.appendChild(powerCell);
-                
-                    const energyCell = document.createElement('td');
-                    energyCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[5] ? data[5].f : ''}</p>`;
-                    tr.appendChild(energyCell);
-                
-                    const temperatureCell = document.createElement('td');
-                    temperatureCell.innerHTML = `<span class="text-xs font-weight-bold">${data[6] ? data[6].f : ''}</span>`;
-                    tr.appendChild(temperatureCell);
-                
-                    const humidityCell = document.createElement('td');
-                    humidityCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[7] ? data[7].f : ''}</p>`;
-                    tr.appendChild(humidityCell);
-                
-                    const occupancyCell = document.createElement('td');
-                    occupancyCell.innerHTML = `<span class="text-xs font-weight-bold">${data[8] ? data[8].f : ''}</span>`;
-                    tr.appendChild(occupancyCell);
-                
-                    const actionCell = document.createElement('td');
-                    actionCell.className = 'align-middle';
-                    actionCell.innerHTML = `<button class="btn btn-link text-secondary mb-0"><i class="fa fa-ellipsis-v text-xs"></i></button>`;
-                    tr.appendChild(actionCell);
-                
-                    // Check if all cells have a value, if not, return null
-                    for (let i = 0; i < data.length; i++) {
-                      if (!data[i]) {
-                        return null;
+                      const tr = document.createElement('tr');
+              
+                      // Create and append the cells for each column
+                      const dateCell = document.createElement('td');
+                      const dateValue = data[0] ? formatDate(data[0].f) : '';
+                      dateCell.innerHTML = `<div class="d-flex px-2"><div><div class="my-auto"><h6 class="mb-0 text-sm">${dateValue}</h6></div></div></div>`;
+                      tr.appendChild(dateCell);
+              
+                      const timeCell = document.createElement('td');
+                      timeCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[1] ? data[1].f : ''}</p>`;
+                      tr.appendChild(timeCell);
+              
+                      const voltageCell = document.createElement('td');
+                      voltageCell.innerHTML = `<span class="text-xs font-weight-bold">${data[2] ? data[2].f : ''}</span>`;
+                      tr.appendChild(voltageCell);
+              
+                      const currentCell = document.createElement('td');
+                      currentCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[3] ? data[3].f : ''}</p>`;
+                      tr.appendChild(currentCell);
+              
+                      const powerCell = document.createElement('td');
+                      powerCell.innerHTML = `<span class="text-xs font-weight-bold">${data[4] ? data[4].f : ''}</span>`;
+                      tr.appendChild(powerCell);
+              
+                      const energyCell = document.createElement('td');
+                      energyCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[5] ? data[5].f : ''}</p>`;
+                      tr.appendChild(energyCell);
+              
+                      const temperatureCell = document.createElement('td');
+                      temperatureCell.innerHTML = `<span class="text-xs font-weight-bold">${data[6] ? data[6].f : ''}</span>`;
+                      tr.appendChild(temperatureCell);
+              
+                      const humidityCell = document.createElement('td');
+                      humidityCell.innerHTML = `<p class="text-sm font-weight-bold mb-0">${data[7] ? data[7].f : ''}</p>`;
+                      tr.appendChild(humidityCell);
+              
+                      const occupancyCell = document.createElement('td');
+                      occupancyCell.innerHTML = `<span class="text-xs font-weight-bold">${data[8] ? data[8].f : ''}</span>`;
+                      tr.appendChild(occupancyCell);
+              
+                      const actionCell = document.createElement('td');
+                      actionCell.className = 'align-middle';
+                      actionCell.innerHTML = `<button class="btn btn-link text-secondary mb-0"><i class="fa fa-ellipsis-v text-xs"></i></button>`;
+                      tr.appendChild(actionCell);
+              
+                      // Check if all cells have a value, if not, return null
+                      for (let i = 0; i < data.length; i++) {
+                          if (!data[i]) {
+                              return null;
+                          }
                       }
-                    }
-                
-                    return tr;
+              
+                      return tr;
                   }
-                </script>
+              
+                  function formatDate(dateString) {
+                      const [year, month, day] = dateString.split('/');
+                      return `${month}/${day}/${year}`;
+                  }
+              </script>
+              
               </div>
             </div>
           </div>
@@ -381,7 +391,7 @@
     </div>
   </main>
   <div class="fixed-plugin">
-   
+
     <div class="card shadow-lg ">
       <div class="card-header pb-0 pt-3 ">
         <div class="float-start">
