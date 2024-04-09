@@ -536,257 +536,349 @@
   <script src="../assets/js/plugins/chartjs.min.js"></script>
   <script>
 
-    var ctxVoltage = document.getElementById("chart-voltage").getContext("2d");
+var ctxVoltage = document.getElementById("chart-voltage").getContext("2d");
 
-    var gradientStroke1 = ctxVoltage.createLinearGradient(0, 230, 0, 50);
+var gradientStroke1 = ctxVoltage.createLinearGradient(0, 230, 0, 50);
 
-    gradientStroke1.addColorStop(1, "rgba(203,12,159,0.2)");
-    gradientStroke1.addColorStop(0.2, "rgba(72,72,176,0.0)");
-    gradientStroke1.addColorStop(0, "rgba(203,12,159,0)");
+gradientStroke1.addColorStop(1, "rgba(203,12,159,0.2)");
+gradientStroke1.addColorStop(0.2, "rgba(72,72,176,0.0)");
+gradientStroke1.addColorStop(0, "rgba(203,12,159,0)");
 
-    let VOLTAGE_SHEET_ID = "1jUYm23ND5VbIYhqv6YAhnQkfnTr-_82c7PBLrcwiNfA";
-    let VOLTAGE_SHEET_TITLE = "Sheet1";
-    let VOLTAGE_SHEET_RANGE = "A1:I";
-    let VOLTAGE_FULL_URL = "https://docs.google.com/spreadsheets/d/" + VOLTAGE_SHEET_ID + "/gviz/tq?sheet=" + VOLTAGE_SHEET_TITLE + "&range=" + VOLTAGE_SHEET_RANGE;
+let VOLTAGE_SHEET_ID = "1jUYm23ND5VbIYhqv6YAhnQkfnTr-_82c7PBLrcwiNfA";
+let VOLTAGE_SHEET_TITLE = "Sheet1";
+let VOLTAGE_SHEET_RANGE = "A1:I";
+let VOLTAGE_FULL_URL = "https://docs.google.com/spreadsheets/d/" + VOLTAGE_SHEET_ID + "/gviz/tq?sheet=" + VOLTAGE_SHEET_TITLE + "&range=" + VOLTAGE_SHEET_RANGE;
 
-    fetch(VOLTAGE_FULL_URL)
-      .then((res) => res.text())
-      .then((rep) => {
-        let data = JSON.parse(rep.substr(47).slice(0, -2));
-        let rows = data.table.rows;
+fetch(VOLTAGE_FULL_URL)
+  .then((res) => res.text())
+  .then((rep) => {
+    let data = JSON.parse(rep.substr(47).slice(0, -2));
+    let rows = data.table.rows;
 
-        let latestDate = null;
-        let labels = [];
-        let voltageData = [];
+    let latestDate = null;
+    let labels = [];
+    let voltageData = [];
 
-        // Extract the voltage data, time labels, and dates
-        for (let i = 1; i < rows.length; i++) {
-          if (rows[i].c[0] && rows[i].c[1] && rows[i].c[2]) {
-            let date = new Date(rows[i].c[0].f);
-            let time = rows[i].c[1].f;
-            let voltage = parseFloat(rows[i].c[2].f);
+    // Extract the voltage data, time labels, and dates
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i].c[0] && rows[i].c[1] && rows[i].c[2]) {
+        let date = new Date(rows[i].c[0].f);
+        let time = rows[i].c[1].f;
+        let voltage = parseFloat(rows[i].c[2].f);
 
-            // Check if the date is the latest date
-            if (!latestDate || date > latestDate) {
-              latestDate = date;
-              labels = [time];
-              voltageData = [voltage];
-            } else if (date.getTime() === latestDate.getTime()) {
-              // If date is the same as the latest date, add to labels and voltageData
-              labels.push(time);
-              voltageData.push(voltage);
-            }
-          }
+        // Check if the date is the latest date
+        if (!latestDate || date > latestDate) {
+          latestDate = date;
+          labels = [time];
+          voltageData = [voltage];
+        } else if (date.getTime() === latestDate.getTime()) {
+          // If date is the same as the latest date, add to labels and voltageData
+          labels.push(time);
+          voltageData.push(voltage);
         }
+      }
+    }
 
-        // Now you have the times and voltages for the latest date
-      document.getElementById("latest-date").innerHTML = latestDate.toDateString();
+    let latestTime = null;
+    const timestamps=labels;
+
+// Iterate through timestamps to find the latest time
+for (let i = 0; i < timestamps.length; i++) {
+  if (!latestTime || timestamps[i] > latestTime) {
+    latestTime = timestamps[i];
+  }
+}
+
+console.log(latestTime);
 
 
-        new Chart(ctxVoltage, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Voltage",
-                tension: 0.4,
-                borderWidth: 0,
-                pointRadius: 0,
-                borderColor: "#cb0c9f",
-                borderWidth: 3,
-                backgroundColor: gradientStroke1,
-                fill: true,
-                data: voltageData,
-                maxBarThickness: 6,
-              },
-            ],
+    // Create an array of 25 hours with a 1-hour interval for the labels, but for the current hour, create labels with a 2-minute interval
+    // Create an array of 25 hours with a 1-hour interval for the labels, but for the current hour, create labels with a 2-minute interval
+let currentHour = parseInt(latestTime.split(":")[0]);
+let latestMinute = parseInt(latestTime.split(":")[1]); // Extract latest minute
+let hourLabels = [];
+for (let i = 0; i < 24; i++) {
+  let hour = i < 10 ? "0" + i : i;
+  if (i < currentHour) {
+    hourLabels.push(hour + ":00");
+  } else if (i === currentHour) {
+    for (let j = 0; j <= latestMinute; j += 2) { // Adjust loop condition
+      let minute = j < 10 ? "0" + j : j;
+      hourLabels.push(hour + ":" + minute);
+    }
+  } else {
+    hourLabels.push("");
+  }
+}
+
+
+    // Initialize two arrays: one for the hourly data and one for the current hour data
+    let hourlyData = Array(currentHour).fill(0);
+    let currentHourData = Array(30).fill(0);
+    
+// Map the voltage data to their respective hour and calculate the hourly average
+let hourlyCounts = Array(currentHour).fill(0);
+let currentHourCount = 0;
+for (let i = 0; i < voltageData.length; i++) {
+  let timeParts = labels[i].split(":");
+  let hour = parseInt(timeParts[0]);
+  let minute = parseInt(timeParts[1]);
+  if (hour < currentHour) {
+    hourlyData[hour] += voltageData[i];
+    hourlyCounts[hour]++;
+  } else if (hour === currentHour && minute <= 58) { // only include data up to 58 minutes of the current hour
+    let index = minute / 2;
+    currentHourData[index] = voltageData[i];
+    currentHourCount++;
+  }
+}
+
+// Calculate the hourly average
+for (let i = 0; i < hourlyData.length; i++) {
+  hourlyData[i] = hourlyData[i] / hourlyCounts[i];
+}
+
+
+    new Chart(ctxVoltage, {
+      type: "line",
+      data: {
+        labels: hourLabels,
+        datasets: [
+          {
+            label: "Voltage",
+            tension: 0.4,
+            borderWidth: 0,
+            pointRadius: 0,
+            borderColor: "#cb0c9f",
+            borderWidth: 3,
+            backgroundColor: gradientStroke1,
+            fill: true,
+            data: hourlyData.concat(currentHourData),
+            maxBarThickness: 6,
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false,
-              },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+        interaction: {
+          intersect: false,
+          mode: "index",
+        },
+        scales: {
+          y: {
+            grid: {
+              drawBorder: false,
+              display: true,
+              drawOnChartArea: true,
+              drawTicks: false,
+              borderDash: [5, 5],
             },
-            interaction: {
-              intersect: false,
-              mode: "index",
-            },
-            scales: {
-              y: {
-                grid: {
-                  drawBorder: false,
-                  display: true,
-                  drawOnChartArea: true,
-                  drawTicks: false,
-                  borderDash: [5, 5],
-                },
-                ticks: {
-                  display: true,
-                  padding: 10,
-                  color: "#b2b9bf",
-                  font: {
-                    size: 11,
-                    family: "Open Sans",
-                    style: "normal",
-                    lineHeight: 2,
-                  },
-                },
-              },
-              x: {
-                grid: {
-                  drawBorder: false,
-                  display: false,
-                  drawOnChartArea: false,
-                  drawTicks: false,
-                  borderDash: [5, 5],
-                },
-                ticks: {
-                  display: true,
-                  color: "#b2b9bf",
-                  padding: 20,
-                  font: {
-                    size: 11,
-                    family: "Open Sans",
-                    style: "normal",
-                    lineHeight: 2,
-                  },
-                },
+            ticks: {
+              display: true,
+              padding: 10,
+              color: "#b2b9bf",
+              font: {
+                size: 11,
+                family: "Open Sans",
+                style: "normal",
+                lineHeight: 2,
               },
             },
           },
-        });
-      });
+          x: {
+            grid: {
+              drawBorder: false,
+              display: false,
+              drawOnChartArea: false,
+              drawTicks: false,
+              borderDash: [5, 5],
+            },
+            ticks: {
+              display: true,
+              color: "#b2b9bf",
+              padding: 20,
+              font: {
+                size: 11,
+                family: "Open Sans",
+                style: "normal",
+                lineHeight: 2,
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
 
 
     //current
 
-    var ctxCurrent = document.getElementById("chart-current").getContext("2d");
+var ctxCurrent = document.getElementById("chart-current").getContext("2d");
 
-    var gradientStroke2 = ctxCurrent.createLinearGradient(0, 230, 0, 50);
+var gradientStroke2 = ctxCurrent.createLinearGradient(0, 230, 0, 50);
 
-    gradientStroke2.addColorStop(1, "rgba(203,12,159,0.2)");
-    gradientStroke2.addColorStop(0.2, "rgba(72,72,176,0.0)");
-    gradientStroke2.addColorStop(0, "rgba(203,12,159,0)");
+gradientStroke2.addColorStop(1, "rgba(203,12,159,0.2)");
+gradientStroke2.addColorStop(0.2, "rgba(72,72,176,0.0)");
+gradientStroke2.addColorStop(0, "rgba(203,12,159,0)");
 
-    let CURRENT_SHEET_ID = "1jUYm23ND5VbIYhqv6YAhnQkfnTr-_82c7PBLrcwiNfA";
-    let CURRENT_SHEET_TITLE = "Sheet1";
-    let CURRENT_SHEET_RANGE = "A1:I";
-    let CURRENT_FULL_URL = "https://docs.google.com/spreadsheets/d/" + CURRENT_SHEET_ID + "/gviz/tq?sheet=" + CURRENT_SHEET_TITLE + "&range=" + CURRENT_SHEET_RANGE;
+let CURRENT_SHEET_ID = "1jUYm23ND5VbIYhqv6YAhnQkfnTr-_82c7PBLrcwiNfA";
+let CURRENT_SHEET_TITLE = "Sheet1";
+let CURRENT_SHEET_RANGE = "A1:I";
+let CURRENT_FULL_URL = "https://docs.google.com/spreadsheets/d/" + CURRENT_SHEET_ID + "/gviz/tq?sheet=" + CURRENT_SHEET_TITLE + "&range=" + CURRENT_SHEET_RANGE;
 
-    fetch(CURRENT_FULL_URL)
-      .then((res) => res.text())
-      .then((rep) => {
-        let data = JSON.parse(rep.substr(47).slice(0, -2));
-        let rows = data.table.rows;
+fetch(CURRENT_FULL_URL)
+  .then((res) => res.text())
+  .then((rep) => {
+    let data = JSON.parse(rep.substr(47).slice(0, -2));
+    let rows = data.table.rows;
 
-        let latestDate = null;
-        let labels = [];
-        let currentData = [];
+    let latestDate = null;
+    let labels = [];
+    let currentData = [];
 
-        // Extract the current data, time labels, and dates
-        for (let i = 1; i < rows.length; i++) {
-          if (rows[i].c[0] && rows[i].c[1] && rows[i].c[3]) {
-            let date = new Date(rows[i].c[0].f);
-            let time = rows[i].c[1].f;
-            let current = parseFloat(rows[i].c[3].f);
+    // Extract the current data, time labels, and dates
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i].c[0] && rows[i].c[1] && rows[i].c[3]) {
+        let date = new Date(rows[i].c[0].f);
+        let time = rows[i].c[1].f;
+        let current = parseFloat(rows[i].c[3].f);
 
-            // Check if the date is the latest date
-            if (!latestDate || date > latestDate) {
-              latestDate = date;
-              labels = [time];
-              currentData = [current];
-            } else if (date.getTime() === latestDate.getTime()) {
-              // If date is the same as the latest date, add to labels and currentData
-              labels.push(time);
-              currentData.push(current);
-            }
-          }
+        // Check if the date is the latest date
+        if (!latestDate || date > latestDate) {
+          latestDate = date;
+          labels = [time];
+          currentData = [current];
+        } else if (date.getTime() === latestDate.getTime()) {
+          // If date is the same as the latest date, add to labels and currentData
+          labels.push(time);
+          currentData.push(current);
         }
+      }
+    }
 
-        // Now you have the times and currents for the latest date
-        console.log(labels);
-        console.log(currentData);
-        console.log(latestDate);
+    // Create an array of 25 hours with a 1-hour interval for the labels, but for the current hour, create labels with a 2-minute interval
+    let currentHour = new Date().getHours();
+    let hourLabels = [];
+    for (let i = 0; i < 24; i++) {
+      let hour = i < 10 ? "0" + i : i;
+      if (i < currentHour) {
+        hourLabels.push(hour + ":00");
+      } else if (i === currentHour) {
+        for (let j = 0; j < 60; j += 2) {
+          let minute = j < 10 ? "0" + j : j;
+          hourLabels.push(hour + ":" + minute);
+        }
+      } else {
+        hourLabels.push("");
+      }
+    }
 
-        new Chart(ctxCurrent, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Current",
-                tension: 0.4,
-                borderWidth: 0,
-                pointRadius: 0,
-                borderColor: "#cb0c9f",
-                borderWidth: 3,
-                backgroundColor: gradientStroke2,
-                fill: true,
-                data: currentData,
-                maxBarThickness: 6,
-              },
-            ],
+    // Initialize two arrays: one for the hourly data and one for the current hour data
+    let hourlyData = Array(currentHour).fill(0);
+    let currentHourData = Array(30).fill(0);
+
+    // Map the current data to their respective hour and calculate the hourly average
+    for (let i = 0; i < currentData.length; i++) {
+      let timeParts = labels[i].split(":");
+      let hour = parseInt(timeParts[0]);
+      let minute = parseInt(timeParts[1]);
+      if (hour < currentHour) {
+        hourlyData[hour] += currentData[i];
+      } else if (hour === currentHour) {
+        let index = minute / 2;
+        currentHourData[index] = currentData[i];
+      }
+    }
+
+    // Calculate the hourly average
+    for (let i = 0; i < hourlyData.length; i++) {
+      hourlyData[i] = hourlyData[i] / 2;
+    }
+
+    new Chart(ctxCurrent, {
+      type: "line",
+      data: {
+        labels: hourLabels,
+        datasets: [
+          {
+            label: "Current",
+            tension: 0.4,
+            borderWidth: 0,
+            pointRadius: 0,
+            borderColor: "#cb0c9f",
+            borderWidth: 3,
+            backgroundColor: gradientStroke2,
+            fill: true,
+            data: hourlyData.concat(currentHourData),
+            maxBarThickness: 6,
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false,
-              },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+        interaction: {
+          intersect: false,
+          mode: "index",
+        },
+        scales: {
+          y: {
+            grid: {
+              drawBorder: false,
+              display: true,
+              drawOnChartArea: true,
+              drawTicks: false,
+              borderDash: [5, 5],
             },
-            interaction: {
-              intersect: false,
-              mode: "index",
-            },
-            scales: {
-              y: {
-                grid: {
-                  drawBorder: false,
-                  display: true,
-                  drawOnChartArea: true,
-                  drawTicks: false,
-                  borderDash: [5, 5],
-                },
-                ticks: {
-                  display: true,
-                  padding: 10,
-                  color: "#b2b9bf",
-                  font: {
-                    size: 11,
-                    family: "Open Sans",
-                    style: "normal",
-                    lineHeight: 2,
-                  },
-                },
-              },
-              x: {
-                grid: {
-                  drawBorder: false,
-                  display: false,
-                  drawOnChartArea: false,
-                  drawTicks: false,
-                  borderDash: [5, 5],
-                },
-                ticks: {
-                  display: true,
-                  color: "#b2b9bf",
-                  padding: 20,
-                  font: {
-                    size: 11,
-                    family: "Open Sans",
-                    style: "normal",
-                    lineHeight: 2,
-                  },
-                },
+            ticks: {
+              display: true,
+              padding: 10,
+              color: "#b2b9bf",
+              font: {
+                size: 11,
+                family: "Open Sans",
+                style: "normal",
+                lineHeight: 2,
               },
             },
           },
-        });
-      });
+          x: {
+            grid: {
+              drawBorder: false,
+              display: false,
+              drawOnChartArea: false,
+              drawTicks: false,
+              borderDash: [5, 5],
+            },
+            ticks: {
+              display: true,
+              color: "#b2b9bf",
+              padding: 20,
+              font: {
+                size: 11,
+                family: "Open Sans",
+                style: "normal",
+                lineHeight: 2,
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
 
     // Power
 
