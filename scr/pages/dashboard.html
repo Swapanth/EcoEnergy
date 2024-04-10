@@ -612,10 +612,10 @@ for (let i = 0; i < 24; i++) {
 }
 
 
-    // Initialize two arrays: one for the hourly data and one for the current hour data
-    let hourlyData = Array(currentHour).fill(0);
-    let currentHourData = Array(30).fill(0);
-    
+// Initialize two arrays: one for the hourly data and one for the current hour data
+let hourlyData = Array(currentHour).fill(0);
+let currentHourData = Array(Math.ceil(latestMinute / 2)).fill(0); // Adjust array size for current hour data
+
 // Map the voltage data to their respective hour and calculate the hourly average
 let hourlyCounts = Array(currentHour).fill(0);
 let currentHourCount = 0;
@@ -626,12 +626,13 @@ for (let i = 0; i < voltageData.length; i++) {
   if (hour < currentHour) {
     hourlyData[hour] += voltageData[i];
     hourlyCounts[hour]++;
-  } else if (hour === currentHour && minute <= 58) { // only include data up to 58 minutes of the current hour
-    let index = minute / 2;
+  } else if (hour === currentHour && minute <= latestMinute) { // Include data up to latestMinute of the current hour
+    let index = Math.floor(minute / 2); // Adjust index calculation
     currentHourData[index] = voltageData[i];
     currentHourCount++;
   }
 }
+
 
 // Calculate the hourly average
 for (let i = 0; i < hourlyData.length; i++) {
@@ -639,81 +640,111 @@ for (let i = 0; i < hourlyData.length; i++) {
 }
 
 
-    new Chart(ctxVoltage, {
-      type: "line",
-      data: {
-        labels: hourLabels,
-        datasets: [
-          {
-            label: "Voltage",
-            tension: 0.4,
-            borderWidth: 0,
-            pointRadius: 0,
-            borderColor: "#cb0c9f",
-            borderWidth: 3,
-            backgroundColor: gradientStroke1,
-            fill: true,
-            data: hourlyData.concat(currentHourData),
-            maxBarThickness: 6,
-          },
-        ],
+new Chart(ctxVoltage, {
+  type: "line",
+  data: {
+    labels: hourLabels,
+    datasets: [
+      {
+        label: "Voltage",
+        tension: 0.4,
+        borderWidth: 0,
+        pointRadius: 0, // Increase point radius to make it more prominent
+        borderColor: "#cb0c9f",
+        borderWidth: 3,
+        backgroundColor: gradientStroke1,
+        fill: true,
+        data: hourlyData.concat(currentHourData),
+        maxBarThickness: 6,
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    interaction: {
+      intersect: false,
+      mode: "index",
+    },
+    scales: {
+      y: {
+        grid: {
+          drawBorder: false,
+          display: true,
+          drawOnChartArea: true,
+          drawTicks: false,
+          borderDash: [5, 5],
         },
-        interaction: {
-          intersect: false,
-          mode: "index",
-        },
-        scales: {
-          y: {
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [5, 5],
-            },
-            ticks: {
-              display: true,
-              padding: 10,
-              color: "#b2b9bf",
-              font: {
-                size: 11,
-                family: "Open Sans",
-                style: "normal",
-                lineHeight: 2,
-              },
-            },
-          },
-          x: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-              borderDash: [5, 5],
-            },
-            ticks: {
-              display: true,
-              color: "#b2b9bf",
-              padding: 20,
-              font: {
-                size: 11,
-                family: "Open Sans",
-                style: "normal",
-                lineHeight: 2,
-              },
-            },
+        ticks: {
+          display: true,
+          padding: 10,
+          color: "#b2b9bf",
+          font: {
+            size: 11,
+            family: "Open Sans",
+            style: "normal",
+            lineHeight: 2,
           },
         },
       },
-    });
+      x: {
+        grid: {
+          drawBorder: false,
+          display: false,
+          drawOnChartArea: false,
+          drawTicks: false,
+          borderDash: [5, 5],
+        },
+        ticks: {
+          display: true,
+          color: "#b2b9bf",
+          padding: 20,
+          font: {
+            size: 11,
+            family: "Open Sans",
+            style: "normal",
+            lineHeight: 2,
+          },
+        },
+      },
+    },
+  },
+  plugins: [{
+  afterDraw: chart => {
+    const dataset = chart.data.datasets[0];
+    const meta = chart.getDatasetMeta(0);
+    const latestMinuteIndex = Math.floor(latestMinute / 2); // Calculate index for the latest minute
+    const latestHourDataIndex = dataset.data.length - currentHourData.length + latestMinuteIndex;
+    const latestMinutePoint = meta.data[latestHourDataIndex];
+    if (latestMinutePoint) {
+      const ctx = chart.ctx;
+      const loadingRadius = 9; // Radius of loading effect
+      const animationDuration = 1000; // Duration of animation in milliseconds
+      const currentTime = Date.now();
+      const progress = (currentTime % animationDuration) / animationDuration;
+      const radius = loadingRadius * Math.sin(progress * Math.PI); // Calculate radius based on progress
+      
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(latestMinutePoint.x, latestMinutePoint.y, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(203,12,159,0.8)';
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}]
+
+
+
+});
+
+
+
   });
 
 
